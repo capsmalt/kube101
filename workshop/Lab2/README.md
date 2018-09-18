@@ -16,7 +16,7 @@ $ kubectl expose deployment guestbook --type="NodePort" --port=3000
 
 レプリカ (*replica*) は，実行中のServiceを含むPodの複製です。複数のレプリカを用意することで，アプリケーションの負荷増大に対応できるリソースを保証できます。
 
-1. `kubectl` は `scale` というサブコマンドを提供しています。既存のDeployment数を変更するために使用します。現在1つインスタンスで動作する `guestbook` を 10インスタンスにキャパシティを増やしてみます。
+1. `kubectl` は `scale` というサブコマンドを提供しています。既存のDeployment数を変更するために使用します。現在1インスタンスで動作する `guestbook` を 10インスタンスにキャパシティを増やしてみます。
 
     実行例:
 
@@ -72,7 +72,7 @@ $ kubectl expose deployment guestbook --type="NodePort" --port=3000
 
 # 2. アプリケーションのアップデートとロールバック
 
-Kubernetesは，アプリケーションを新しいコンテナイメージにローリングアップデート機能を提供します。これは動作中のコンテナイメージを容易にアップデート，または問題が起きた際には容易にロールバックできるようにします。
+Kubernetesは，アプリケーションを新しいコンテナイメージにローリングアップデートする機能を提供します。これは動作中のコンテナイメージを容易にアップデート，または問題が起きた際には容易にロールバックできるようにします。
 
 以前のハンズオン(Lab1)では `v1` タグが付与されたイメージを使用していました。アップグレードを実施する際には， `v2` タグが付与されたイメージを使用します。
 
@@ -128,7 +128,7 @@ Kubernetesは，アプリケーションを新しいコンテナイメージに�
    deployment "guestbook" successfully rolled out
    ```
 
-3. ブラウザ上で `<public-IP>:<nodeport>` を指定して，アプリケーション動作を確認します。
+3. ブラウザ上で `<public-ip>:<nodeport>` を指定して，アプリケーション動作を確認します。
 
    "nodeport" および "public-ip" は以下の方法で取得できます。
 
@@ -145,7 +145,7 @@ Kubernetesは，アプリケーションを新しいコンテナイメージに�
    deployment "guestbook"
    ```
 
-   実行状況を確認する場合は， `kubectl rollout status deployment/guestbook` で確認できます。
+   実行状況を確認する場合は， `$ kubectl rollout status deployment/guestbook` で確認できます。
    
 5. ロールアウト実行する際，*古い* レプリカと，*新しい* レプリカを確認できます。
    古いレプリカは，10のPodとしてデプロイされています。(Lab2で1から10に増加させました)
