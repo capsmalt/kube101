@@ -4,13 +4,11 @@ Kubernetesクラスター (IBM Cloud Kubernetes Service)へのアプリケーシ
 
 # 0. 前提となるCLIのインストールと，K8sクラスターの構成
 
-**※手順0.は既に実施済ですので，操作不要です。**
-
-1. CLIのインストール
+1. CLIのインストール **(※事前準備にて実施済のため不要)**
 
     ["IBM Cloud Developer Tools のインストール方法"](https://console.bluemix.net/docs/cli/index.html#overview) に従い，ご利用されているOSに合わせたコマンドを実行してください。
 
-2. K8sクラスターの作成
+2. K8sクラスターの作成 **(※セミナー会場にて実施済のため不要)**
     
     ibmcloudコマンドで作成する場合は， `$ ibmcloud cs cluster-create --name <name-of-cluster>` コマンドを実行します。
 
@@ -18,7 +16,7 @@ Kubernetesクラスター (IBM Cloud Kubernetes Service)へのアプリケーシ
    
     `$ ibmcloud cs cluster-config <name-of-cluster>` を実行し，K8sクラスターへの接続情報を取得します。
 
-    実行例: 
+    実行例: **(Windowsの場合は，exportではなく "set" を使用します)**
 
     ```bash.sh
     $ ibmcloud cs cluster-config mycluster
