@@ -12,8 +12,13 @@ $ git clone https://github.com/capsmalt/guestbook.git
 
 このリポジトリは複数バージョンのguestbookアプリケーションを含んでいます。構成ファイルを使用してアプリケーションの一部をデプロイできるように準備しています。
 
-git cloneが完了したら，そのディレクトリに移動してください。 git cloneを実行したディレクトリで，`cd guestbook` することで対象ディレクトリに移動できます。
-`v1` ディレクトリ配下にこのハンズオンで使用する全ての構成ファイルが配置されています。
+git cloneが完了したら，そのディレクトリに移動してください。 
+
+`$ cd guestbook` 
+
+`v1` ディレクトリ配下にこのハンズオンで使用する全ての構成ファイルが配置されていますので移動します。
+
+`$ cd v1`
 
 # 1. Scale apps natively
 
@@ -35,9 +40,10 @@ Deploymentは，Pod群に似た集合を管理します。レプリカ数を指�
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: guestbook
+  name: guestbook-v1
   labels:
     app: guestbook
+    version: "1.0"
 spec:
   replicas: 3
   selector:
@@ -47,6 +53,7 @@ spec:
     metadata:
       labels:
         app: guestbook
+        version: "1.0"
     spec:
       containers:
       - name: guestbook
@@ -56,7 +63,7 @@ spec:
           containerPort: 3000
 ```
 
-上記の構成ファイルは，`guestbook`という名前のdeploymentオブジェクトを作成します。同時に`ibmcom/guestbook:v1`イメージを動作させる1つのコンテナを含むPodを作成します。この構成ファイルによって，`replica set = 3` と指定されるため，Kubernetesは少なくとも3つのアクティブなPodが動作するように試みます。
+上記の構成ファイルは，`guestbook-v1`という名前のdeploymentオブジェクトを作成します。同時に`ibmcom/guestbook:v1`イメージを動作させる1つのコンテナを含むPodを作成します。この構成ファイルによって，`replica set = 3` と指定されるため，Kubernetesは少なくとも3つのアクティブなPodが動作するように試みます。
 
 - guestbook deploymentの作成
 
@@ -64,7 +71,7 @@ spec:
 
    ``` console
    $ kubectl create -f guestbook-deployment.yaml
-   deployment "guestbook" created
+   deployment "guestbook-v1" created
    ```
 
 - labelが app=guestbook であるPod一覧を表示
@@ -77,12 +84,13 @@ spec:
    ```
 
 構成ファイルのレプリカ数を変更した場合，Kubernetesはリクエストに合わせて，Podの追加/削除を行います。構成の変更は以下のコマンドで行えます。
+(今回は閲覧のみで，値の変更はしません)
 
    ```console
    $ kubectl edit deployment guestbook
    ```
 
-上記の操作で，KubernetesサーバーからDeploymentの最新の構成情報を検索し，編集できます。使用していた元のyamlファイルに比べて多数のフィールドが含まれていることに気づくでしょう。これは，我々が値を指定するものだけでなく，Kubernetesが知っているDeploymentに関する全てのプロパティを含むためです。
+上記の操作で，KubernetesサーバーからDeploymentの最新の構成情報を検索し，編集できます。使用していた元のyamlファイル(`guestbook-deployment.yaml`)に比べて多数のフィールドが含まれていることに気づくでしょう。これは我々が直接指定した値だけでなく，Kubernetesが知っているDeploymentに関する全てのプロパティを含むためです。
 
 Deploymentを作成するために使ったDeploymentファイルを編集して，変更を加えることができます。手元で編集した後に以下のコマンドで，変更を反映させられます。
 
@@ -92,7 +100,7 @@ Deploymentを作成するために使ったDeploymentファイルを編集して
 
 この操作によって，変更を加えた我々のyamlと，現在の状態の構成との "diff" を取り，Kubernetesが変更を適用します。
 
-今から，外部のクライアント向けにdeploymentを公開するServiceオブジェクトを定義します。
+次に，外部のクライアント向けにdeploymentを公開する Serviceオブジェクト を定義します。
 
 **guestbook-service.yaml**
 
@@ -123,9 +131,9 @@ spec:
 
   `nodeport` と `public-ip` を取得する方法を思い出してください:
 
-  `$ kubectl describe service guestbook`
+  `$ kubectl get service guestbook` でポート番号を確認
   および
-  `$ ibmcloud cs workers <name-of-cluster>`
+  `$ ibmcloud cs workers <name-of-cluster>` でPublic IPを確認
 
 # 2. バックエンドサービスに接続
 
@@ -178,7 +186,7 @@ spec:
 - RedisサーバーのPod動作を確認します:
 
     ```console
-    $ kubectl get pods -lapp=redis,role=master
+    $ kubectl get pods -l app=redis,role=master
     NAME                 READY     STATUS    RESTARTS   AGE
     redis-master-q9zg7   1/1       Running   0          2d
     ```
@@ -198,7 +206,7 @@ spec:
     redis-cli> exit
     ```
 
-DNS loopupを通して，guestbookアプリケーションが `redis-master` Deploymentに接続できるように，Serviceを公開しましょう。
+次に，guestbookアプリケーションが `redis-master` Deploymentに接続できるように，Serviceを公開しましょう。
 
 **redis-master-service.yaml**
 
@@ -229,7 +237,7 @@ spec:
 - データベースを使用するRedis serviceを発見できるようにguestbookを再起動します:
 
     ```console
-    $ kubectl delete deploy guestbook 
+    $ kubectl delete deploy guestbook-v1 
     $ kubectl create -f guestbook-deployment.yaml
     ```
 
@@ -239,8 +247,10 @@ spec:
 複数のブラウザを開いてページを更新すると，一貫した状態を保持したguestbookの異なるコピーを確認できます。
 全てのインスタンスは同一のバッキング・パーシスタンスストレージに書き込み，全てのインスタンスはguestbookエントリを表示するために同じストレージから読み出します。
 
-トラフィック増に応じてスケールするシンプルな3層アプリケーションができました。
-主なボトルネックは，各リクエストを処理するデータベース・サーバーを一つしか持っていないことです。一つのシンプルな解決策は，読み・書き用に異なるデータベースを用いて分離することで，データ一貫性を達成することです。
+つまり，データの永続化ができるようになりました。
+従って，複数のコンテナが動作するようなトラフィック増に応じて，スケールするシンプルな3層アプリケーションができたことになります。
+
+しかし，一般的に言われる主なボトルネックは，各リクエストを処理するデータベース・サーバーを一つしか持っていないことです。一つのシンプルな解決策は，読み・書き用に異なるデータベースを用いて分離することで，データ一貫性を達成することです。
 
 ![rw_to_master](../images/Master.png)
 
@@ -286,7 +296,7 @@ spec:
 
  - 全てのslaveレプリカが動作しているか確認します
  ```console
-$ kubectl get pods -lapp=redis,role=slave
+$ kubectl get pods -l app=redis,role=slave
 NAME                READY     STATUS    RESTARTS   AGE
 redis-slave-kd7vx   1/1       Running   0          2d
 redis-slave-wwcxw   1/1       Running   0          2d
@@ -304,7 +314,7 @@ $ kubectl exec -it redis-slave-kd7vx  redis-cli
 127.0.0.1:6379> exit
 ```
 
-DNS名でアクセスできるように，Redis slave serviceをデプロイします。
+次に，Redis slave serviceを公開します。
 一度デプロイされたら，"読み(read)"操作は `redis-slave` podに，"書き(write)"操作は `redis-master` podに送信されるように構成されます。
 
 **redis-slave-service.yaml**
@@ -331,7 +341,7 @@ spec:
 
 - slave serviceを発見できるようにguestbookアプリケーションを再始動します
     ```console
-    $ kubectl delete deploy guestbook
+    $ kubectl delete deploy guestbook-v1
     $ kubectl create -f guestbook-deployment.yaml
     ```
     
