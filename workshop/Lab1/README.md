@@ -6,40 +6,46 @@ Kubernetesクラスター (IBM Cloud Kubernetes Service)へのアプリケーシ
 
 **※手順0.は既に実施済ですので，操作不要です。**
 
-1. CLIのインストール:
-["IBM Cloud Developer Tools のインストール方法"](https://console.bluemix.net/docs/cli/index.html#overview) に従い，ご利用されているOSに合わせたコマンドを実行してください。
+1. CLIのインストール
 
-2. K8sクラスターの構成:
-ibmcloudコマンドで作成する場合は， `$ ibmcloud cs cluster-create --name <name-of-cluster>` コマンドを実行します。
+    ["IBM Cloud Developer Tools のインストール方法"](https://console.bluemix.net/docs/cli/index.html#overview) に従い，ご利用されているOSに合わせたコマンドを実行してください。
 
-3.  `$ ibmcloud cs cluster-config <name-of-cluster>` を実行し，K8sクラスターへの接続情報を取得します。
- - 実行例: 
+2. K8sクラスターの作成
+    
+    ibmcloudコマンドで作成する場合は， `$ ibmcloud cs cluster-create --name <name-of-cluster>` コマンドを実行します。
 
-```bash.sh
-$ ibmcloud cs cluster-config mycluster
-OK
-The configuration for mycluster was downloaded successfully. Export environment variables to start using Kubernetes.
+3. 接続情報の取得
+   
+    `$ ibmcloud cs cluster-config <name-of-cluster>` を実行し，K8sクラスターへの接続情報を取得します。
 
-export KUBECONFIG=/Users/capsair/.bluemix/plugins/container-service/clusters/mycluster/kube-config-hou02-mycluster.yml
-```
+    実行例: 
+
+    ```bash.sh
+    $ ibmcloud cs cluster-config mycluster
+    OK
+    The configuration for mycluster was downloaded successfully. Export environment variables to start using Kubernetes.
+
+    export KUBECONFIG=/Users/capsair/.bluemix/plugins/container-service/clusters/mycluster/kube-config-hou02-mycluster.yml
+    ```
  
 4. 3.で取得した `KUBECONFIG` の情報をexportします。
 
-`$ export KUBECONFIG=/Users/capsair/.bluemix/plugins/container-service/clusters/mycluster/kube-config-hou02-mycluster.yml`
+    `$ export KUBECONFIG=/Users/capsair/.bluemix/plugins/container-service/clusters/mycluster/kube-config-hou02-mycluster.yml`
 
-※K8sクラスターを操作する際には，Kubernetesのクライアント用CLI `kubectl` を使用します。その際にKUBECONFIGの接続情報が必要になります。
+    ※K8sクラスターを操作する際には，Kubernetesのクライアント用CLI `kubectl` を使用します。その際にKUBECONFIGの接続情報が必要になります。
+
 
 # 1. アプリケーションのデプロイ
 
 `guestbook` アプリケーションをK8sクラスターにデプロイします。
 DockerHub上に，`ibmcom/guestbook:v1` という名前でビルド済Dockerイメージがアップロード済です。
 
-1. `guestbook`を実行します: 
+1. `guestbook`を実行します。
 
    ```$ kubectl run guestbook --image=ibmcom/guestbook:v1```
 
    アプリケーションの実行ステータスを確認してみましょう。
-   `$ kubectl get pods`.
+   `$ kubectl get pods`
 
    実行例:
 
@@ -81,16 +87,13 @@ DockerHub上に，`ibmcom/guestbook:v1` という名前でビルド済Dockerイ�
    guestbook   NodePort   10.10.10.253   <none>        3000:31208/TCP   1m
    ```
    
-   We can see that our `<nodeport>` is `31208`. We can see in the output the port mapping from 3000 inside 
-   the pod exposed to the cluster on port 31208. This port in the 31000 range is automatically chosen, 
-   and could be different for you.
-   上記の出力例の場合，`<nodeport>は` 31208`です。Podは31208ポートで公開され，3000ポートにフォワードされます。
+   上記の出力例の場合，`<nodeport>`は31208です。Podは31208ポートで公開され，3000ポートにフォワードされます。
    31000の範囲のポート番号が自動的に選択され，割り当てられます。受講者ごとにポート番号は異なります。
 
 5. 現在 `guestbook` アプリケーションは，ご自身のK8sクラスター上で動作しており，インターネットに公開されている状態です。
    アクセスするために必要な情報を取得します。
 
-   Container Service内のワーカーノードの外部IPアドレスを次のコマンドで取得します。
+   Container Service内のワーカーノードの外部IPアドレスを次のコマンドで取得します。  
    `$ ibmcloud cs workers <name-of-cluster>` を実行すると，`<public-IP>`の列の値を取得できます。
    
    ```console
@@ -104,9 +107,9 @@ DockerHub上に，`ibmcom/guestbook:v1` という名前でビルド済Dockerイ�
    
 6. 4.および5.の手順で取得した，IPアドレスと，ポート番号を使用してアプリケーションにアクセスします。
    ブラウザ上で， `<public-IP>:<nodeport>` のように指定します。今回の例では， `173.193.99.136:31208` です。
-   
-おめでとうございます。あなたのアプリケーションをK8sクラスター上にデプロイ完了しました。
 
+
+おめでとうございます。あなたのアプリケーションをK8sクラスター上にデプロイ完了しました。
 
 次のハンズオンはこちら [Lab2](../Lab2/README.md) です。 
 Lab1で作成したK8sコンテンツを削除する場合は，以下のコマンドを実行します。
