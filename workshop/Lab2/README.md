@@ -128,7 +128,7 @@ Kubernetesは，アプリケーションを新しいコンテナイメージに�
    deployment "guestbook" successfully rolled out
    ```
 
-3. ブラウザ上で `<public-ip>:<nodeport>` を指定して，アプリケーション動作を確認します。
+3. ブラウザ上で `<public-ip>:<nodeport>` を指定して，アプリケーション動作を確認します。
 
    "nodeport" および "public-ip" は以下の方法で取得できます。
 
