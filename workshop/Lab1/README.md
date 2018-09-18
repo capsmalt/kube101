@@ -1,4 +1,4 @@
-# Lab 1. セットアップ
+# Lab 1. セットアップ & Kubernetesクラスターへのアプリケーションデプロイ
 
 Kubernetesクラスター (IBM Cloud Kubernetes Service)へのアプリケーション・デプロイの方法を学びます。
 
@@ -33,7 +33,7 @@ Kubernetesクラスター (IBM Cloud Kubernetes Service)へのアプリケーシ
     ※K8sクラスターを操作する際には，Kubernetesのクライアント用CLI `kubectl` を使用します。その際にKUBECONFIGの接続情報が必要になります。
 
 
-# 1. アプリケーションのデプロイ
+# 1. K8sクラスターへのアプリケーションデプロイ
 
 `guestbook` アプリケーションをK8sクラスターにデプロイします。
 DockerHub上に，`ibmcom/guestbook:v1` という名前でビルド済Dockerイメージがアップロード済です。
