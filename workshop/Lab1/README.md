@@ -1,46 +1,54 @@
-# Lab 1. Set up and deploy your first application
+# Lab 1. セットアップ
 
-Learn how to deploy an application to a Kubernetes cluster hosted within
-the IBM Container Service.
+Kubernetesクラスター (IBM Cloud Kubernetes Service)へのアプリケーション・デプロイの方法を学びます。
 
-# 0. Install Prerequisite CLIs and Provision a Kubernetes Cluster
+# 0. 前提となるCLIのインストールと，K8sクラスターの構成
 
-If you haven't already:
-1. Install the IBM Cloud CLIs and login, as described in [Lab 0](../Lab0/README.md).
-2. Provision a cluster:
+**※手順0.は既に実施済ですので，操作不要です。**
 
-   ```$ ibmcloud cs cluster-create --name <name-of-cluster>```
+1. CLIのインストール:
+["IBM Cloud Developer Tools のインストール方法"](https://console.bluemix.net/docs/cli/index.html#overview) に従い，ご利用されているOSに合わせたコマンドを実行してください。
 
-Once the cluster is provisioned, the kubernetes client CLI `kubectl` needs to be
-configured to talk to the provisioned cluster.
+2. K8sクラスターの構成:
+ibmcloudコマンドで作成する場合は， `$ ibmcloud cs cluster-create --name <name-of-cluster>` コマンドを実行します。
 
-1. Run `$ ibmcloud cs cluster-config <name-of-cluster>`, and set the `KUBECONFIG`
-   environment variable based on the output of the command. This will
-   make your `kubectl` client point to your new Kubernetes cluster.
+3.  `$ ibmcloud cs cluster-config <name-of-cluster>` を実行し，K8sクラスターへの接続情報を取得します。
+ - 実行例: 
 
-Once your client is configured, you are ready to deploy your first application, `guestbook`.
+```bash.sh
+$ ibmcloud cs cluster-config mycluster
+OK
+The configuration for mycluster was downloaded successfully. Export environment variables to start using Kubernetes.
 
-# 1. Deploy your application
+export KUBECONFIG=/Users/capsair/.bluemix/plugins/container-service/clusters/mycluster/kube-config-hou02-mycluster.yml
+```
+ 
+4. 3.で取得した `KUBECONFIG` の情報をexportします。
 
-In this part of the lab we will deploy an application called `guestbook`
-that has already been built and uploaded to DockerHub under the name
-`ibmcom/guestbook:v1`.
+`$ export KUBECONFIG=/Users/capsair/.bluemix/plugins/container-service/clusters/mycluster/kube-config-hou02-mycluster.yml`
 
-1. Start by running `guestbook`:
+※K8sクラスターを操作する際には，Kubernetesのクライアント用CLI `kubectl` を使用します。その際にKUBECONFIGの接続情報が必要になります。
+
+# 1. アプリケーションのデプロイ
+
+`guestbook` アプリケーションをK8sクラスターにデプロイします。
+DockerHub上に，`ibmcom/guestbook:v1` という名前でビルド済Dockerイメージがアップロード済です。
+
+1. `guestbook`を実行します: 
 
    ```$ kubectl run guestbook --image=ibmcom/guestbook:v1```
 
-   This action will take a bit of time. To check the status of the running application,
-   you can use `$ kubectl get pods`.
+   アプリケーションの実行ステータスを確認してみましょう。
+   `$ kubectl get pods`.
 
-   You should see output similar to the following:
+   実行例:
 
    ```console
    $ kubectl get pods
    NAME                          READY     STATUS              RESTARTS   AGE
    guestbook-59bd679fdc-bxdg7    0/1       ContainerCreating   0          1m
    ```
-   Eventually, the status should show up as `Running`.
+   少し待つと，実行中を示すSTATUS属性である `Running` に変わります。
    
    ```console
    $ kubectl get pods
@@ -48,20 +56,24 @@ that has already been built and uploaded to DockerHub under the name
    guestbook-59bd679fdc-bxdg7    1/1       Running             0          1m
    ```
    
-   The end result of the run command is not just the pod containing our application containers,
-   but a Deployment resource that manages the lifecycle of those pods.
+   runコマンドの最終結果は，アプリケーションコンテナを含むPodだけではなく，
+   これらのPodのライフサイクルを管理するDeploymentリソースです。
  
    
-3. Once the status reads `Running`, we need to expose that deployment as a
-   service so we can access it through the IP of the worker nodes.
-   The `guestbook` application listens on port 3000.  Run:
+3. ステータスが「実行中」になったら，ワーカーノードのIPを介して外部からアクセスできるようにするために，DeploymentをServiceを使用して公開する必要があります。
+
+   `guestbook` アプリケーションが，3000ポートでLISTENするようにします。
+   
+   実行例:
 
    ```console
    $ kubectl expose deployment guestbook --type="NodePort" --port=3000
    service "guestbook" exposed
    ```
 
-4. To find the port used on that worker node, examine your new service:
+4. ワーカー・ノードで使用されているポート番号を調べるために，Service情報を取得します。
+   
+   実行例:
 
    ```console
    $ kubectl get service guestbook
@@ -72,10 +84,14 @@ that has already been built and uploaded to DockerHub under the name
    We can see that our `<nodeport>` is `31208`. We can see in the output the port mapping from 3000 inside 
    the pod exposed to the cluster on port 31208. This port in the 31000 range is automatically chosen, 
    and could be different for you.
+   上記の出力例の場合，`<nodeport>は` 31208`です。Podは31208ポートで公開され，3000ポートにフォワードされます。
+   31000の範囲のポート番号が自動的に選択され，割り当てられます。受講者ごとにポート番号は異なります。
 
-5. `guestbook` is now running on your cluster, and exposed to the internet. We need to find out where it is accessible.
-   The worker nodes running in the container service get external IP addresses.
-   Run `$ ibmcloud cs workers <name-of-cluster>`, and note the public IP listed on the `<public-IP>` line.
+5. 現在 `guestbook` アプリケーションは，ご自身のK8sクラスター上で動作しており，インターネットに公開されている状態です。
+   アクセスするために必要な情報を取得します。
+
+   Container Service内のワーカーノードの外部IPアドレスを次のコマンドで取得します。
+   `$ ibmcloud cs workers <name-of-cluster>` を実行すると，`<public-IP>`の列の値を取得できます。
    
    ```console
    $ ibmcloud cs workers <name-of-cluster>
@@ -84,20 +100,18 @@ that has already been built and uploaded to DockerHub under the name
    kube-hou02-pa1e3ee39f549640aebea69a444f51fe55-w1   173.193.99.136   10.76.194.30   free           normal   Ready    hou02   1.5.6_1500*
    ```
    
-   We can see that our `<public-IP>` is `173.193.99.136`.
+   上記の例では，`<public-IP>` の値は `173.193.99.136` です。
    
-6. Now that you have both the address and the port, you can now access the application in the web browser
-   at `<public-IP>:<nodeport>`. In the example case this is `173.193.99.136:31208`.
+6. 4.および5.の手順で取得した，IPアドレスと，ポート番号を使用してアプリケーションにアクセスします。
+   ブラウザ上で， `<public-IP>:<nodeport>` のように指定します。今回の例では， `173.193.99.136:31208` です。
    
-Congratulations, you've now deployed an application to Kubernetes!
+おめでとうございます。あなたのアプリケーションをK8sクラスター上にデプロイ完了しました。
 
-When you're all done, you can either use this deployment in the
-[next lab of this course](../Lab2/README.md), or you can remove the deployment
-and thus stop taking the course.
 
-  1. To remove the deployment, use `$ kubectl delete deployment guestbook`.
+次のハンズオンはこちら [Lab2](../Lab2/README.md) です。 
+Lab1で作成したK8sコンテンツを削除する場合は，以下のコマンドを実行します。
 
-  2. To remove the service, use `$ kubectl delete service guestbook`.
+  1. Deploymentを削除する `$ kubectl delete deployment guestbook`.
 
-You should now go back up to the root of the repository in preparation
-for the next lab: `$ cd ..`.
+  2. Serviceを削除する `$ kubectl delete service guestbook`.
+
