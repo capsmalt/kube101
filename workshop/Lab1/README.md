@@ -12,9 +12,9 @@ Kubernetesクラスター (IBM Cloud Kubernetes Service)へのアプリケーシ
 
 2. K8sクラスターの作成
     
-    ibmcloudコマンドで作成する場合は， `$ ibmcloud cs cluster-create --name <name-of-cluster>` コマンドを実行します。
+    ibmcloudコマンドで作成する場合は， `$ ibmcloud cs cluster-create --name <name-of-cluster>` コマンドを実行します。
 
-3. 接続情報の取得
+3. 接続情報の取得
    
     `$ ibmcloud cs cluster-config <name-of-cluster>` を実行し，K8sクラスターへの接続情報を取得します。
 
@@ -107,6 +107,7 @@ DockerHub上に，`ibmcom/guestbook:v1` という名前でビルド済Dockerイ�
    
 6. 4.および5.の手順で取得した，IPアドレスと，ポート番号を使用してアプリケーションにアクセスします。
    ブラウザ上で， `<public-IP>:<nodeport>` のように指定します。今回の例では， `173.193.99.136:31208` です。
+
 
 
 おめでとうございます。あなたのアプリケーションをK8sクラスター上にデプロイ完了しました。
