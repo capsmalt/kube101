@@ -140,7 +140,7 @@ spec:
     targetPort: http-server
   selector:
     app: guestbook
-  type: LoadBalancer
+  type: NodePort
 ```
 
 The above configuration creates a Service resource named guestbook. A Service
