@@ -1,41 +1,35 @@
-# Lab 2: Scale and Update Deployments
+# Lab 2: Deployment のスケーリングとアップデート
 
-In this lab, you'll learn how to update the number of instances
-a deployment has and how to safely roll out an update of your application
-on Kubernetes. 
+Lab2では，Deploymentのインスタンス数を増減させるスケーリングと，安全にロールアウトさせながらアプリケーションをアップデートする方法を学びます。 
 
-For this lab, you need a running deployment of the `guestbook` application
-from the previous lab. If you deleted it, recreate it using:
+このLabを実施するには，`guestbook` アプリケーションのDeploymentが動作している必要があります。
+前のハンズオン(Lab1)の最後に削除済の場合は，以下の手順で再度作成してください。
+
+実行例:
 
 ```console
 $ kubectl run guestbook --image=ibmcom/guestbook:v1
 $ kubectl expose deployment guestbook --type="NodePort" --port=3000
 ```
     
-# 1. Scale apps with replicas
+# 1. レプリカ数(replica)の指定によるアプリケーションのスケーリング
 
-A *replica* is a copy of a pod that contains a running service. By having
-multiple replicas of a pod, you can ensure your deployment has the available
-resources to handle increasing load on your application.
+レプリカ (*replica*) は，実行中のServiceを含むPodの複製です。複数のレプリカを用意することで，アプリケーションの負荷増大に対応できるリソースを保証できます。
 
-1. `kubectl` provides a `scale` subcommand to change the size of an
-   existing deployment. Let's increase our capacity from a single running instance of
-   `guestbook` up to 10 instances:
+1. `kubectl` は `scale` というサブコマンドを提供しています。既存のDeployment数を変更するために使用します。現在1つインスタンスで動作する `guestbook` を 10インスタンスにキャパシティを増やしてみます。
+
+    実行例:
 
    ``` console
    $ kubectl scale --replicas=10 deployment guestbook
    deployment "guestbook" scaled
    ```
 
-   Kubernetes will now try to make reality match the desired state of
-   10 replicas by starting 9 new pods with the same configuration as
-   the first.
+   Kubernetesは，初期構成と同じ構成で 9つの新しいPodを作成することで，desired state (今回は10)を満たすように動作します。
 
-4. To see your changes being rolled out, you can run:
-   `kubectl rollout status deployment guestbook`.
+2. ロールアウトされた変更内容を確認するために次のコマンドを実行します。 `kubectl rollout status deployment guestbook`.
 
-   The rollout might occur so quickly that the following messages might
-   _not_ display:
+    ※処理が早く完了した場合，以下のメッセージが表示されない場合があります
 
    ```console
    $ kubectl rollout status deployment guestbook
@@ -51,10 +45,9 @@ resources to handle increasing load on your application.
    deployment "guestbook" successfully rolled out
    ```
 
-5. Once the rollout has finished, ensure your pods are running by using:
-   `kubectl get pods`.
+3. ロールアウトが完了したら，Podの動作状況を次のコマンドで確認します。 `kubectl get pods`.
 
-   You should see output listing 10 replicas of your deployment:
+   以下のように，Deploymentのレプリカが10つ確認できるはずです。
 
    ```console
    $ kubectl get pods
@@ -71,38 +64,32 @@ resources to handle increasing load on your application.
    guestbook-562211614-zsp0j   1/1       Running   0          2m
    ```
 
-**Tip:** Another way to improve availability is to
+**Tip:** 可用性を向上させるもう一つの方法
 [add clusters and regions](https://console.bluemix.net/docs/containers/cs_planning.html#cs_planning_cluster_config)
-to your deployment, as shown in the following diagram:
+クラスター自体，あるいはリージョンを追加することでも可用性を向上させられます。
 
 ![HA with more clusters and regions](../images/cluster_ha_roadmap.png)
 
-# 2. Update and roll back apps
+# 2. アプリケーションのアップデートとロールバック
 
-Kubernetes allows you to do rolling upgrade of your application to a new
-container image. This allows you to easily update the running image and also allows you to
-easily undo a rollout if a problem is discovered during or after deployment.
+Kubernetesは，アプリケーションを新しいコンテナイメージにローリングアップデート機能を提供します。これは動作中のコンテナイメージを容易にアップデート，または問題が起きた際には容易にロールバックできるようにします。
 
-In the previous lab, we used an image with a `v1` tag. For our upgrade
-we'll use the image with the `v2` tag.
+以前のハンズオン(Lab1)では `v1` タグが付与されたイメージを使用していました。アップグレードを実施する際には， `v2` タグが付与されたイメージを使用します。
 
-To update and roll back:
-1. Using `kubectl`, you can now update your deployment to use the
-   `v2` image. `kubectl` allows you to change details about existing
-   resources with the `set` subcommand. We can use it to change the
-   image being used.
+アップデートおよびロールバック:
+1. `kubectl` コマンドで， `v2` イメージを使用するように Deploymentをアップデートすることができます。`kubectl` コマンドと `set` サブコマンドを使用します。
 
     ```$ kubectl set image deployment/guestbook guestbook=ibmcom/guestbook:v2```
 
-   Note that a pod could have multiple containers, each with its own name.
-   Each image can be changed individually or all at once by referring to the name.
-   In the case of our `guestbook` Deployment, the container name is also `guestbook`.
-   Multiple containers can be updated at the same time.
-   ([More information](https://kubernetes.io/docs/user-guide/kubectl/kubectl_set_image/).)
+   ※1つのPodは，複数のコンテナで構成することが可能です。各々固有の名前を持っており，その名前を使用することによって個別にイメージを変更したり，一度に全てのコンテナイメージを変更させることも可能です。
+   `guestbook` のDeploymentにおけるコンテナ名は，`guestbook` です。
 
-3. Run `kubectl rollout status deployment/guestbook` to check the status of
-   the rollout. The rollout might occur so quickly that the following messages
-   might _not_ display:
+    複数コンテナを同時にアップデート 
+    ([More information](https://kubernetes.io/docs/user-guide/kubectl/kubectl_set_image/).)
+
+2. `kubectl rollout status deployment/guestbook` を実行することで，ロールアウトのステータスを確認できます。
+    
+    ※処理が早く完了した場合，以下のメッセージが表示されない場合があります
 
    ```console
    $ kubectl rollout status deployment/guestbook
@@ -141,33 +128,33 @@ To update and roll back:
    deployment "guestbook" successfully rolled out
    ```
 
-4. Test the application as before, by accessing `<public-IP>:<nodeport>` 
-   in the browser to confirm your new code is active.
+3. ブラウザ上で `<public-IP>:<nodeport>` を指定して，アプリケーション動作を確認します。
 
-   Remember, to get the "nodeport" and "public-ip" use:
+   "nodeport" および "public-ip" は以下の方法で取得できます。
 
    `$ kubectl describe service guestbook`
-   and
-   `$ bx cs workers <name-of-cluster>`
+   および
+   `$ ibmcloud cs workers <name-of-cluster>`
 
-   To verify that you're running "v2" of guestbook, look at the title of the page,
-   it should now be `Guestbook - v2`
+   guestbook アプリの "v2" が動作していることを確認してください。ページタイトルの文字列が `Guestbook - v2` に変更されているはずです。
 
-5. If you want to undo your latest rollout, use:
+4. 最新のロールアウトに戻したい場合は以下を実行します。
+
    ```console
    $ kubectl rollout undo deployment guestbook
    deployment "guestbook"
    ```
 
-   You can then use `kubectl rollout status deployment/guestbook` to see
-   the status.
+   実行状況を確認する場合は， `kubectl rollout status deployment/guestbook` で確認できます。
    
-6. When doing a rollout, you see references to *old* replicas and *new* replicas.
-   The *old* replicas are the original 10 pods deployed when we scaled the application.
-   The *new* replicas come from the newly created pods with the different image.
-   All of these pods are owned by the Deployment.
-   The deployment manages these two sets of pods with a resource called a ReplicaSet.
-   We can see the guestbook ReplicaSets with:
+5. ロールアウト実行する際，*古い* レプリカと，*新しい* レプリカを確認できます。
+   古いレプリカは，10のPodとしてデプロイされています。(Lab2で1から10に増加させました)
+   新しいレプリカは，異なるイメージを使用して新たに生成されました。
+   これらの全てのPodは，Deploymentが所有します。
+   Deploymentは，これらの2セットのPod群を ReplicaSetと呼ばれるリソースを使用して管理しています。
+   
+   guestbookのReplicaSetは以下のようにして確認できます。
+   
    ```console
    $ kubectl get replicasets -l run=guestbook
    NAME                   DESIRED   CURRENT   READY     AGE
@@ -175,12 +162,12 @@ To update and roll back:
    guestbook-768cc55c78   0         0         0         3h
    ```
 
-Before we continue, let's delete the application so we can learn about
-a different way to achieve the same results:
+おめでとうございます。第2段階のバージョンのアプリケーションのデプロイが完了しました。
+次のハンズオンはこちら [Lab3](../Lab3/README.md) です。
 
- To remove the deployment, use `kubectl delete deployment guestbook`.
+Lab3を開始する前に，Lab2で作成したK8sコンテンツを削除してください。以下のコマンドを実行します。
 
- To remove the service, use `kubectl delete service guestbook`.
+  1. Deploymentを削除する `$ kubectl delete deployment guestbook`.
 
-Congratulations! You deployed the second version of the app. Lab 2
-is now complete.
+  2. Serviceを削除する `$ kubectl delete service guestbook`.
+  
